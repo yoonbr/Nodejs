@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>데이터 삽입</title>
+</head>
+<body>
+	<form method="post" enctype="multipart/form-data">
+		itemid:<input type="text" name="itemid" value="1" readonly="readonly" /><br/>
+		itemname:<input type="text" name="itemname" value="사과" /><br/>
+		price:<input type="text" name="price" value="1500"/><br/>
+		description:<input type="text" name="description" value="비타민 C가 풍부"/><br/>
+		new image:<input type="file" name="pictureurl" /><br />
+		image:<input type="text" name="oldpictureurl" value='apple.png' readonly="readonly"/><br/>
+		<input type="submit" value="UPDATE">
+	</form>
+</body>
+</html>
