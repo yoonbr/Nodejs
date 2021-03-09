@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>노드 포트폴리오 서버</title>
+</head>
+<body>
+	<h2>전체 보기</h2>
+	<div align = "center" class="body">
+		<table width = '100%'>
+			<tr>
+				<td align='center' width="50%">
+					<a href="/">메인 화면</a>
+				</td>
+				<td align='right' id="countdisp">
+					데이터 개수:
+				</td>
+			</tr>	
+		</table>
+		<table border="1" id="itemlist" width="100%">
+			<tr class="header">
+				<th align="center" width="20%">상품 ID</th>
+				<th align="center" width="60%">상품명</th>
+				<th align="center" width="20%">가격</th>
+			</tr>
+		</table>
+	</div>
+</body>
+
+<script>
+	//ajax 객체 생성
+	var xhr = new XMLHttpRequest();
+	//요청 생성
+	xhr.open('get', 'all');
+	//요청 전송
+	xhr.send(null);
+	
+	//서버의 응답 처리
+	xhr.onreadystatechange = function(){
+		if(xhr.readyState == 4){
+			if(xhr.status >= 200 && xhr.status < 300){
+				//전송된 결과 확인
+				//텍스트 나 json 은 responseText
+				//XML 은 responseXML
+				//alert(xhr.responseText);
+				
+				//JSON 파싱 
+				var data = JSON.parse(xhr.responseText);
+				
+				//개수 출력
+				var countdisp = document.getElementById("countdisp");
+				countdisp.innerHTML += data.count + "개"
+				
+				//데이터 목록 가져오기 
+				var list = data.list;
+				
+				//출력할 내용을 저장할 변수를 생성 
+				var displayHTML = "";
+				
+				//배열을 순회 
+				list.forEach(function(item){
+					displayHTML += "<tr class='record'>";
+					displayHTML += "<td align='left'>" 
+						+ item.itemid + "</td>";
+					displayHTML += "<td align='left'>" 
+						+ "<a href='#' onclick='detail("
+						+ item.itemid +")'>"
+						+ item.itemname + "</a></td>";
+					displayHTML += "<td align='right'>" 
+						+ item.price + "원</td>";
+					displayHTML += "</tr>";
+				});
+				
+				//출력
+				document.getElementById("itemlist").innerHTML 
+					+= displayHTML;
+				
+			}
+		}
+	}
+
+	
+	//제목을 눌렀을 때 호출되는 함수
+	function detail(itemid){
+		//세션 스토리지에 저장
+		sessionStorage["itemid"] = itemid;
+		//상세 보기 페이지로 이동
+		location.href = "getitem";
+	}
+	
+</script>
+</html>
+
+
+

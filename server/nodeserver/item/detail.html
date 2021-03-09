@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>상세보기</title>
+</head>
+<body>
+	<div align='center' id="disp">
+		<h2>상폼 상세 보기</h2>
+		<table>
+			<tr>
+				<td><img id='img'/></td>
+				<td align='center'>
+					<table>
+						<tr height='50'>
+							<td width='80'>상품명</td>
+							<td width='160' id='itemname'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>가격</td>
+							<td width='160' id='price'></td>
+						</tr>	
+						<tr height='50'>
+							<td width='80'>비고</td>
+							<td width='160' id='description'></td>
+						</tr>
+						<tr>
+							<td colspan='2' align='center'
+							width='240'>
+							<a href="viewall">목록보기</a><br/>
+							<a href="#">수정하기</a><br/>
+							<a href="#">삭제하기</a><br/>
+							</td>
+						</tr>
+					</table>
+				</td>
+				</tr>			
+		</table>
+	</div>
+</body>
+
+<script>
+	//조회할 itemid 가져오기
+	var itemid = sessionStorage["itemid"];
+	//ajax 객체 생성 
+	var xhr = new XMLHttpRequest();
+	//요청 생성
+	xhr.open('get', '/item/detail/' + itemid);
+	//요청 전송
+	xhr.send(null);
+	
+	//ajax 응답이 온 경우 호출되는 콜백 처리
+	xhr.onreadystatechange = function(){
+		if(xhr.readyState == 4){
+			if(xhr.status >= 200 && xhr.status < 300){
+				//데이터 확인
+				//alert(xhr.responseText);
+				
+				//데이터 파싱
+				var object = JSON.parse(xhr.responseText);
+				//데이터가 있는 경우
+				if(object.result == true){
+					//item 키의 값을 가져옵니다.
+					var item = object.item;
+					document.getElementById("img").src = 
+						"../../img/" + item.pictureurl;
+					document.getElementById("itemname").innerHTML = 
+						item.itemname;
+					document.getElementById("price").innerHTML = 
+						item.price +"원";
+					document.getElementById("description").innerHTML = 
+						item.description;
+					
+				}else{
+					document.getElementById("disp").innerHTML =
+						'<h3>데이터가 존재하지 않습니다.</h3>';
+				}
+			}
+		}
+	};
+</script>
+
+</html>
