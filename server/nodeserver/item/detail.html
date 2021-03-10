@@ -6,7 +6,7 @@
 </head>
 <body>
 	<div align='center' id="disp">
-		<h2>상폼 상세 보기</h2>
+		<h2>Item Detail</h2>
 		<table>
 			<tr>
 				<td><img id='img'/></td>
@@ -28,8 +28,8 @@
 							<td colspan='2' align='center'
 							width='240'>
 							<a href="viewall">목록보기</a><br/>
-							<a href="#">수정하기</a><br/>
-							<a href="#">삭제하기</a><br/>
+							<a href="#" id="updatebtn">수정하기</a><br/>
+							<a href="#" id="deletebtn">삭제하기</a><br/>
 							</td>
 						</tr>
 					</table>
@@ -78,6 +78,45 @@
 			}
 		}
 	};
+	
+	document.getElementById("deletebtn").addEventListener('click', function(e){
+		// 삭제 여부를 확인 
+		var result = confirm("정말로 삭제하시겠습니까?")
+		if(result == true){
+			// 삭제할 itemid 찾아오기 
+			var itemid = sessionStorage["itemid"];
+			
+			// ajax 요청 객체 생성 
+			var xhr = new XMLHttpRequest(); 
+			xhr.open('POST', 'delete', true);
+			
+			// 파일이 없는 POST 방식의 파라미터를 생성 
+			xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");
+			xhr.send("itemid=" + itemid)
+			
+			// 결과가 전송되었을 때 수행할 작업 
+			xhr.onreadystatechange = function(){
+				if(xhr.readyState == 4){
+					if(xhr.status >= 200 && xhr.status < 300){
+						var obj = JSON.parse(xhr.responseText);
+						if(obj.result == true) {
+							sessionStorage.clear();
+							alert("삭제 완료")
+							location.href = 'viewall';	
+						} else {
+							alert("삽입에 실패하였습니다.")
+						}
+					}
+				}
+			}
+		}
+	});
+	
+	// 수정하기를 누르면 호출되는 스크립트 코드 
+	// app.js 파일에 가서 /item/update 요청을 get 방식으로 요청하면 어떻게 처리하는지 확인 
+	document.getElementById("updatebtn").addEventListener('click', function(e){
+		location.href = 'update';
+	})
 </script>
 
 </html>

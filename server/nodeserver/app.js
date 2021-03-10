@@ -194,4 +194,200 @@ app.get('/item/paging', (req, res, next) => {
 });
 
 
+// 이미지 다운로드 처리 
+app.get('/item/img/:fileid', function(req, res){
+	// 파일 이름 가져오기 
+	var fileId = req.params.fileid;
+	// 실제 파일 경로 생성 
+	var file = '/Users/yoonbr/Downloads/nodeserver/public/img' + '/' + fileId;
+	console.log("file:" + file);
+	// 파일 다운로드 구현 
+	mimetype = mime.lookup(fileId);
+	console.log("file:" + mimetype);
+	res.setHeader('Content-disposition', 'attachment; filename=' + fileId);
+	res.setHeader('Content-type', mimetype);
+	// 파일 다운로드 
+	var filestream = fs.createReadStream(file);
+	filestream.pipe(res);
+});
+
+// 삽입 수정 삭제에 이용할 공통 코드 - 년,월,일, 시,분,초를 저장하기 위한 변수 
+var year;
+var month;
+var day;
+
+var hour;
+var minute;
+var second;
+
+// 현재 시간을 문자열로 리턴하는 함수
+function currentDay() {
+	var date = new Date();
+	year = date.getFullYear();
+	
+	// 월을 가져오고 월이 10보다 작으면 앞에 0을 붙임(2자리로 만들기)
+	month = date.getMonth() + 1;
+	month = month >= 10 ? month:'0' + month;
+	
+	// 일을 가져오고 일이 10보다 작으면 앞에 0을 붙임(2자리로 만들기)
+	day = date.getDate(); 
+	day = day >= 10 ? day:'0' + day;
+	
+	hour = date.getHours(); 
+	hour = hour >= 10 ? hour:'0' + hour;
+	
+	minute = date.getMinutes(); 
+	minute = minute >= 10 ? minute:'0' + minute;
+	
+	second = date.getSeconds();
+	second = second >= 10 ? second:'0' + second;
+	
+}
+
+// 현재 시간을 텍스트 파일에 기록하는 함수 
+function updateDate(){
+	const writeStream = fs.createWriteStream("./update.txt");
+	writeStream.write(year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second)
+}
+
+// 삽입 링크를 눌렀을 때 이동할 페이지를 결정하는 코드 
+app.get('/item/insert', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/item/insert.html'));
+});
+
+// 데이터 삽입을 처리하는 코드 (POST)
+// 파일 업로드가 있을 때는 , 파일의 업로드 개수 
+app.post('/item/insert', upload.single('pictureurl'), 
+		(req, res, next) => {
+	
+	// 파라미터 가져오기 
+	const itemname = req.body.itemname;
+	const price = req.body.price;
+	const description = req.body.description;
+	
+	// 파일 읽기
+	var pictureurl; 
+	// 파일이 있는지 물어보기 
+	if(req.file){
+		pictureurl = req.file.filename
+	} else { 
+		pictureurl = "default.jpg";
+	}
+	
+	// 데이터 베이스 연결 
+	connect();
+	// 가장 큰 itemid를 찾아옴 
+	connection.query('select max(itemid) maxid from item', 
+			function(err, results, fields){
+		if(err) {
+			throw err;
+		}
+		var itemid; 
+		if(results.length > 0) {
+			itemid = results[0].maxid + 1;
+		} else {
+			itemid = 1;
+		}
+		
+		// 현재 날짜와 시간 가져오기 
+		currentDay(); 
+		// 데이터 삽입 
+				connection.query('insert into item(itemid, itemname, price, description, pictureurl, updatedate) values(?,?,?,?,?,?)', 
+						[itemid, itemname, price, description, pictureurl,  year + '-' + month + '-' + day], 
+						function(err, results, fields) {
+					if(err){
+						throw err;
+					}
+					// 삽입 성공 
+					if(results.affectedRows > 0) {
+						updateDate();
+						res.json({'result':true});
+					} else {
+						res.json({'result':false});
+					}
+					
+					close();
+				})
+	})	
+})
+
+// item 삭제 요청을 처리할 코드 
+app.post('/item/delete', (req, res, netx) => {
+	// 파라미터 읽어오기 
+	const itemid = req.body.itemid;
+	// 현재시간 설정 
+	currentDay();
+	// 데이터베이스 접속
+	connect();
+	// SQL 실행 
+	connection.query('delete from item where itemid=?', [itemid], 
+			function(err, results, fields){
+		if(err){
+			throw err;
+		}
+		// 삭제 성공 여부 판단 
+		if(results.affectedRows >= 0){
+			res.json({'result':true});
+		}else{
+			res.json({'result':false});
+		}
+		close();
+	})
+});
+
+// 상세보기에서 수정하기를 클릭했을 때 처리 - 페이지 이동 
+app.get('/item/update', (req, res, next) => {
+	console.log("업데이트 보기");
+	// item 디렉토리에 update.html 파일을 출력 
+	res.sendFile(path.join(__dirname, '/item/update.html'));
+});
+
+// 수정하기 화면에 수정하기를 클릭했을 때 처리 - 실제 수정을 처리 
+//데이터 수정: itemid, itemname, description, price, oldpictureurl, pictureurl(파일)을 받아서 처리
+app.post('/item/update', upload.single('pictureurl'), (req, res, next) => {
+	
+	//파라미터 가져오기 - itemid가 있어야 함 (기존의 아이디 사용)
+	const itemid = req.body.itemid;
+	const itemname = req.body.itemname;
+	const description = req.body.description;
+	const price = req.body.price;
+	const oldpictureurl = req.body.oldpictureurl;
+
+	var pictureurl;
+	if(req.file){
+		pictureurl = req.file.filename
+	}else{
+		// 이전에 썼던걸 사용
+		pictureurl = oldpictureurl;
+	}
+	
+	connect();
+	
+	currentDay();
+	
+	//데이터 수정
+	connection.query('update  item set itemname=?, price=?, description=?, pictureurl=?, updatedate=? where itemid=?', 
+			[itemname, price, description, pictureurl,  year + '-' + month + '-' + day, itemid], function(err, results, fields) {
+		if (err)
+			throw err;
+		if(results.affectedRows == 1){
+			updateDate();
+
+			res.json({'result':true}); 
+		}else{
+			res.json({'result':false}); 
+		}
+		close();
+	});
+});
+
+// 마지막 업데이트 된 시간을 리턴하는 처리 
+app.get("/item/updatedate", (req, res, next) => {
+	fs.readFile('./update.txt', function(err, data){
+		console.log(data);
+		console.log(data.toString());
+		res.json({'result':data.toString()});
+	})
+});
+
 
