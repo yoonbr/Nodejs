@@ -2,10 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>노드 포트폴리오 서버</title>
+<title> node server </title>
 </head>
 <body>
-	<h2>전체 보기</h2>
+	<h2>wine list</h2>
 	<div align = "center" class="body">
 		<table width = '100%'>
 			<tr>
@@ -17,11 +17,13 @@
 				</td>
 			</tr>	
 		</table>
-		<table border="1" id="itemlist" width="100%">
+		<table border="1" id="winelist" width="100%">
 			<tr class="header">
-				<th align="center" width="20%">상품 ID</th>
-				<th align="center" width="60%">상품명</th>
-				<th align="center" width="20%">가격</th>
+				<th align="center" width="30%">와인이름</th>
+				<th align="center" width="15%">종류</th>
+				<th align="center" width="20%">제조국가</th>
+				<th align="center" width="20%">제조품종</th>
+				<th align="center" width="15%">와인사진</th>
 			</tr>
 		</table>
 	</div>
@@ -58,38 +60,37 @@
 				var displayHTML = "";
 				
 				//배열을 순회 
-				list.forEach(function(item){
+				list.forEach(function(wsearch){
 					displayHTML += "<tr class='record'>";
 					displayHTML += "<td align='left'>" 
-						+ item.itemid + "</td>";
-					displayHTML += "<td align='left'>" 
 						+ "<a href='#' onclick='detail("
-						+ item.itemid +")'>"
-						+ item.itemname + "</a></td>";
-					displayHTML += "<td align='right'>" 
-						+ item.price + "원</td>";
+						+ wsearch.winenum +")'>"
+						+ wsearch.winename + "</a></td>";
+					displayHTML += "<td align='center'>" 
+						+ wsearch.category + "</td>";
+					displayHTML += "<td align='center'>" 
+						+ wsearch.country + "</td>";
+					displayHTML += "<td align='center'>" 
+						+ wsearch.varieties + "</td>";
+					displayHTML += "<td align='center'>" 
+						+ wsearch.wineimg + "</td>";
 					displayHTML += "</tr>";
 				});
 				
 				//출력
-				document.getElementById("itemlist").innerHTML 
+				document.getElementById("winelist").innerHTML 
 					+= displayHTML;
 				
 			}
 		}
 	}
-
-	
 	//제목을 눌렀을 때 호출되는 함수
-	function detail(itemid){
+	function detail(winenum){
 		//세션 스토리지에 저장
-		sessionStorage["itemid"] = itemid;
+		sessionStorage["winenum"] = winenum;
 		//상세 보기 페이지로 이동
-		location.href = "getitem";
-	}
-	
+		location.href = "getnote";
+		}
+
 </script>
 </html>
-
-
-

@@ -1,21 +1,24 @@
-const express = require('express');
-const morgan = require('morgan');
-const path = require('path');
-const mysql = require('mysql');
-const multer = require('multer');
-const fs = require('fs');
+const express = require('express')
+const morgan = require('morgan')
+const path = require('path')
+const mysql = require('mysql')
+const multer = require('multer')
+const fs = require('fs')
 
-//서버 설정
-const app = express();
-app.set('port', process.env.PORT || 9393);
+// 9393번 포트로 서버 설정
+// 80(http), 443(https) - 포트번호를 적을 필요 없음 
+const app = express()
+app.set('port', process.env.PORT || 80)
 
-//로그 출력 설정
-app.use(morgan('dev'));
+// 로그 출력 설정 
+app.use(morgan('dev'))
 
-//정적 파일이 저장될 디렉토리 설정
-app.use(express.static('public'));
+// 정적파일(public) 사용 설정 
+app.use(express.static('public'))
 
-//post 방식의 파라미터 읽기
+// post 방식의 파라미터 읽기
+// GET 서버에게 데이터를 전달을 할때 URL을 붙여서 전달 - 장점 : 자동 재전송 , 대신 파라미터가 256자 넘을 수 없고 URL 방식이라 보안이 취약 
+// POST 자동 재전송이 안됨 , 보안 GET보다 // 조회 제외 무조건 POST, 보낼 때 비밀번호 textview file - POST
 var bodyParser = require('body-parser')
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
@@ -23,6 +26,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 })); 
 
 //파일 다운로드를 위한 설정 
+// 앱은 링크로 파일을 다운로드 받을 수 없기때문에 
 var util = require('util')
 var mime = require('mime')
 
@@ -32,7 +36,7 @@ app.use((err, req, res, next) => {
 	res.status(500).send(err.message)
 });
 
-//파일 업로드를 위한 설정
+//파일 업로드를 위한 설정 'public/img'
 //img 디렉토리를 연결
 try {
 	fs.readdirSync('public/img');
@@ -40,23 +44,28 @@ try {
 	console.error('img 폴더가 없으면 img 폴더를 생성합니다.');
 	fs.mkdirSync('public/img');
 }
+
 //파일 이름은 기본 파일 이름에 현재 시간을 추가해서 생성
 const upload = multer({
 	storage: multer.diskStorage({
 		destination(req, file, done) {
-			//업로드할 디렉토리 설정
+			// 업로드 디렉토리 설정 
 			done(null, 'public/img/');
 		},
 		filename(req, file, done) {
-			//파일 이름 결정
+			// 파일 이름 결정 
 			const ext = path.extname(file.originalname);
 			done(null, path.basename(file.originalname, ext) + Date.now() + ext);
 		},
 	}),
-	//파일의 최대 크기 설정
+	// 파일 최대 크기 설정 
 	limits: { fileSize: 10 * 1024 * 1024 },
 });
 
+// 파일 업로드때 고민할 사항 : 파일 이름 생성 (고유해야 함) 고유한 파일 이름 생성법 
+// 1. 현재시간을 붙임 2. UUID(128 숫자문자조합) 사용 3. 잡 코리아 같은 사이트..? - 아이디(고유)를 붙임 
+
+// 데이터베이스 연결 
 var connection;
 function connect(){
 	connection = mysql.createConnection({
@@ -64,7 +73,7 @@ function connect(){
 		port : 3306,
 		user : 'root',
 		password : '',
-		database:'winenote'
+		database:'wine'
 	});
 	connection.connect(function(err) {
 		if (err) {
@@ -87,307 +96,100 @@ app.listen(app.get('port'), () => {
 	console.log(app.get('port'), '번 포트에서 대기 중');
 });
 
-//get 방식으로 / 요청이 오면 index.html을 출력 
+// get 방식으로 / 요청이 오면 index.html 출력 
 app.get('/', (req, res) => {
 	  res.sendFile(path.join(__dirname, '/index.html'));
 })
 
-//get 방식으로 item/all 요청이 오면 데이터를 리턴
-app.get('/item/all', (req, res, next) => {
-	//데이터베이스 연결
-	connect();
-	//데이터 목록을 저장할 변수
-	var list;
-	//전체 목록 가져오는 SQL을 실행
-	connection.query(
-		"select * from item order by itemid desc", 
-		function(err, results, fields){
-			//err은 에러 객체
-			//results는 SQL 실행 결과
-			if(err){
-				throw err;
-			}
-			//에러가 없는 경우 - 가져온 목록을 list 에 저장
-			//결과는 항상 배열입니다.
-			list = results;
-			res.json({'count':list.length, 'list':list});
-			//데이터베이스 닫기
-			close();
-		})
-});
-
-//get 방식으로 /item/viewall 요청이 오면 /item/all.html을 출력 
-app.get('/item/viewall', (req, res) => {
-	  res.sendFile(path.join(__dirname, '/item/all.html'));
-})
-
-//상세보기 서비스 처리
-app.get('/item/detail/:itemid', (req, res, next) => {
-	//뒤쪽 URL 부분 읽기
-	var itemid = req.params.itemid
-	//데이터베이스 연결
-	connect();
-	//데이터 가져오기 SQL 실행
-	connection.query('select * from item where itemid=?', 
-			[itemid], function(err, results, fields){
+// get 방식으로 /wn/all 요청이 오면 데이터를 리턴 
+app.get('/wn/all', (req, res, next) => {
+	// 데이터베이스 연결 
+	connect()
+	// 데이터 목록을 저장할 변수 
+	var list
+	// 전체 목록을 가져오는 SQL 실행 
+	connection.query("select * from wsearch order by winenum",
+	// connection.query("select * from wn_search order by winenum desc",
+			function(err, results, fields){
+		// err은 에러 객체 
+		//result는 SQL 실행 결과 
 		if(err){
 			throw err;
 		}
-		
-		//데이터 가져왔는지 확인
-		if(results.length == 0){
-			res.json({'result':false});
-		}else{
-			res.json({'result':true, 'item':results[0]})
-		}
+		// 에러가 없는 경우 - 가져온 목록을 list에 저장 
+		// 결과는 항상 배열 
+		list = results;
+		res.json({'count':list.length, 'list':list});
+		// 데이터베이스 닫기 
 		close();
-	});
-});
+		
+	})
+})
 
-//item/getitem 요청이 get 방식으로 요청된 경우 처리
-//item 디렉토리 안의 detail.html 로 이동
-app.get('/item/getitem', (req, res, next) => {
-	res.sendFile(path.join(__dirname, '/item/detail.html'));
-});
+// get 방식으로 /wn/viewall 요청이 오면 /note/all.html을 출력 
+app.get('/wn/viewall', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/note/all.html'));
+})
 
-//페이지 단위로 데이터를 넘겨주는 처리
-app.get('/item/itemlist', (req, res, next) => {
-	//페이지 번호와 데이터 개수를 가져오기 
-	//get 방식의 파라미터 읽기
+// 상세보기 서비스 처리 
+app.get('/wn/detail/:winenum', (req, res, next) => {
+	// 뒤쪽 URL 부분 읽기 
+	var itemid = req.params.winenum
+	// 데이터베이스 연결 
+	connect()
+	// 데이터 가져오기 SQL 실행 
+	connection.query("select * from wsearch where winenum=?", [winenum], 
+			function(err, results, fields){ 
+				if(err){
+					throw err;
+				}
+				
+				// 데이터 가져왔는지 확인 
+				if(results.length == 0) {
+					res.json({'result':false})
+				} else {
+					res.json({'result':true, 'note':results[0]})
+				}
+				// 데이터베이스 닫기 
+				close();
+	})
+})
+
+// wn/getwine 요청이 get 방식으로 요청된 경우 처리 
+app.get('/wn/getwine', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/note/detail.html'));
+})
+
+// 페이지 단위로 데이터를 넘겨주는 처리 
+app.get('/note/winelist', (req, res, next) => {
+	// 페이지 번호와 데이터 개수 가져오기 
+	// get 방식의 파라미터 읽기
 	const pageno = req.query.pageno;
 	const count = req.query.count;
 	
-	//파라미터의 값이 없을때를 위해서 파라미터의 기본값을 설정
-	//시작하는 데이터 번호와 페이지 당 데이터 개수 설정
+	// 파라미터의 값이 없을때를 위해서 파라미터의 기본 값을 설정
 	var start = 0;
-	var size = 10;
+	var size = 2;
 	
-	if(pageno != undefined){
-		if(count != undefined){
-			size = parseInt(count);
+	if(pageno != undefined) {
+		if(count != undefined) {
+			size = parseInt(count)
 		}
-		start = (pageno - 1) * size;
+		start = (pageno - 1) * size 
 	}
 	
-	connect();
+	connect()
 	connection.query(
-		'select * from item order by itemid desc limit ? ,?',
-		[start, size], function(err, results, fields){
-			if(err){
-				throw err;
+			'select * from wsearch order by winenum desc limit ?, ?', [start, size], 
+			function(err, results, fields){
+				if(err){
+					throw err;
+				}
 			}
-			var list = results;
-			//전체 데이터 개수 가져오기
-			connection.query('select count(*) cnt from item',
-				function(err, results, fields){
-				if(err){throw err;}
-				res.json({'count':results[0].cnt, 
-					'list':list});
-			});
-		})
-});
-
-//item/paging 요청이 get 방식으로 요청된 경우 처리
-//item 디렉토리 안의 paging.html 로 이동
-app.get('/item/paging', (req, res, next) => {
-	res.sendFile(path.join(__dirname, '/item/paging.html'));
-});
-
-
-// 이미지 다운로드 처리 
-app.get('/item/img/:fileid', function(req, res){
-	// 파일 이름 가져오기 
-	var fileId = req.params.fileid;
-	// 실제 파일 경로 생성 
-	var file = '/Users/yoonbr/Downloads/nodeserver/public/img' + '/' + fileId;
-	console.log("file:" + file);
-	// 파일 다운로드 구현 
-	mimetype = mime.lookup(fileId);
-	console.log("file:" + mimetype);
-	res.setHeader('Content-disposition', 'attachment; filename=' + fileId);
-	res.setHeader('Content-type', mimetype);
-	// 파일 다운로드 
-	var filestream = fs.createReadStream(file);
-	filestream.pipe(res);
-});
-
-// 삽입 수정 삭제에 이용할 공통 코드 - 년,월,일, 시,분,초를 저장하기 위한 변수 
-var year;
-var month;
-var day;
-
-var hour;
-var minute;
-var second;
-
-// 현재 시간을 문자열로 리턴하는 함수
-function currentDay() {
-	var date = new Date();
-	year = date.getFullYear();
+			var list = results
+			// 전체 데터 개수 가져오기 
+			
 	
-	// 월을 가져오고 월이 10보다 작으면 앞에 0을 붙임(2자리로 만들기)
-	month = date.getMonth() + 1;
-	month = month >= 10 ? month:'0' + month;
-	
-	// 일을 가져오고 일이 10보다 작으면 앞에 0을 붙임(2자리로 만들기)
-	day = date.getDate(); 
-	day = day >= 10 ? day:'0' + day;
-	
-	hour = date.getHours(); 
-	hour = hour >= 10 ? hour:'0' + hour;
-	
-	minute = date.getMinutes(); 
-	minute = minute >= 10 ? minute:'0' + minute;
-	
-	second = date.getSeconds();
-	second = second >= 10 ? second:'0' + second;
-	
-}
-
-// 현재 시간을 텍스트 파일에 기록하는 함수 
-function updateDate(){
-	const writeStream = fs.createWriteStream("./update.txt");
-	writeStream.write(year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second)
-}
-
-// 삽입 링크를 눌렀을 때 이동할 페이지를 결정하는 코드 
-app.get('/item/insert', (req, res, next) => {
-	res.sendFile(path.join(__dirname, '/item/insert.html'));
-});
-
-// 데이터 삽입을 처리하는 코드 (POST)
-// 파일 업로드가 있을 때는 , 파일의 업로드 개수 
-app.post('/item/insert', upload.single('pictureurl'), 
-		(req, res, next) => {
-	
-	// 파라미터 가져오기 
-	const itemname = req.body.itemname;
-	const price = req.body.price;
-	const description = req.body.description;
-	
-	// 파일 읽기
-	var pictureurl; 
-	// 파일이 있는지 물어보기 
-	if(req.file){
-		pictureurl = req.file.filename
-	} else { 
-		pictureurl = "default.jpg";
-	}
-	
-	// 데이터 베이스 연결 
-	connect();
-	// 가장 큰 itemid를 찾아옴 
-	connection.query('select max(itemid) maxid from item', 
-			function(err, results, fields){
-		if(err) {
-			throw err;
-		}
-		var itemid; 
-		if(results.length > 0) {
-			itemid = results[0].maxid + 1;
-		} else {
-			itemid = 1;
-		}
-		
-		// 현재 날짜와 시간 가져오기 
-		currentDay(); 
-		// 데이터 삽입 
-				connection.query('insert into item(itemid, itemname, price, description, pictureurl, updatedate) values(?,?,?,?,?,?)', 
-						[itemid, itemname, price, description, pictureurl,  year + '-' + month + '-' + day], 
-						function(err, results, fields) {
-					if(err){
-						throw err;
-					}
-					// 삽입 성공 
-					if(results.affectedRows > 0) {
-						updateDate();
-						res.json({'result':true});
-					} else {
-						res.json({'result':false});
-					}
-					
-					close();
-				})
-	})	
 })
-
-// item 삭제 요청을 처리할 코드 
-app.post('/item/delete', (req, res, netx) => {
-	// 파라미터 읽어오기 
-	const itemid = req.body.itemid;
-	// 현재시간 설정 
-	currentDay();
-	// 데이터베이스 접속
-	connect();
-	// SQL 실행 
-	connection.query('delete from item where itemid=?', [itemid], 
-			function(err, results, fields){
-		if(err){
-			throw err;
-		}
-		// 삭제 성공 여부 판단 
-		if(results.affectedRows >= 0){
-			res.json({'result':true});
-		}else{
-			res.json({'result':false});
-		}
-		close();
-	})
-});
-
-// 상세보기에서 수정하기를 클릭했을 때 처리 - 페이지 이동 
-app.get('/item/update', (req, res, next) => {
-	console.log("업데이트 보기");
-	// item 디렉토리에 update.html 파일을 출력 
-	res.sendFile(path.join(__dirname, '/item/update.html'));
-});
-
-// 수정하기 화면에 수정하기를 클릭했을 때 처리 - 실제 수정을 처리 
-//데이터 수정: itemid, itemname, description, price, oldpictureurl, pictureurl(파일)을 받아서 처리
-app.post('/item/update', upload.single('pictureurl'), (req, res, next) => {
-	
-	//파라미터 가져오기 - itemid가 있어야 함 (기존의 아이디 사용)
-	const itemid = req.body.itemid;
-	const itemname = req.body.itemname;
-	const description = req.body.description;
-	const price = req.body.price;
-	const oldpictureurl = req.body.oldpictureurl;
-
-	var pictureurl;
-	if(req.file){
-		pictureurl = req.file.filename
-	}else{
-		// 이전에 썼던걸 사용
-		pictureurl = oldpictureurl;
-	}
-	
-	connect();
-	
-	currentDay();
-	
-	//데이터 수정
-	connection.query('update  item set itemname=?, price=?, description=?, pictureurl=?, updatedate=? where itemid=?', 
-			[itemname, price, description, pictureurl,  year + '-' + month + '-' + day, itemid], function(err, results, fields) {
-		if (err)
-			throw err;
-		if(results.affectedRows == 1){
-			updateDate();
-
-			res.json({'result':true}); 
-		}else{
-			res.json({'result':false}); 
-		}
-		close();
-	});
-});
-
-// 마지막 업데이트 된 시간을 리턴하는 처리 
-app.get("/item/updatedate", (req, res, next) => {
-	fs.readFile('./update.txt', function(err, data){
-		console.log(data);
-		console.log(data.toString());
-		res.json({'result':data.toString()});
-	})
-});
 
 
