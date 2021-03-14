@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h2>로그인</h2>
+	<div id="msgdisp"></div>
+	<form method="post" id="loginform">
+		<p>
+			아이디<input type="text" name="memberid" id="memberid" />
+		</p>
+		<p>
+			비밀번호<input type="password" name="memberpw" id="memberpw" /><span
+				id="pwspan"></span>
+		</p>
+		<input type="button" id="loginbtn" value="로그인" />
+	</form>
+</body>
+<script>
+loginbtn.addEventListener("click", function(e){
+	var memberid = document.getElementById("memberid");
+	var memberpw = document.getElementById("memberpw");
+	
+	const xhr = new XMLHttpRequest();
+	xhr.open('POST', 'login');
+	xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xhr.send("memberid=" + memberid.value + "&memberpw=" + memberpw.value);
+									
+	// XMLHttpRequest.readyState 프로퍼티가 변경(이벤트 발생)될 때마다 onreadystatechange 이벤트 핸들러가 호출된다.
+	xhr.onreadystatechange = function(e) {
+		if (xhr.readyState !== XMLHttpRequest.DONE)
+			return;
+		// status는 response 상태 코드를 반환 : 200 => 정상 응답
+		if (xhr.status === 200) {
+			const result = JSON
+					.parse(xhr.responseText).result;
+			if (result == true) {
+				sessionStorage["memberid"] = JSON.parse(xhr.responseText).member.memberid;
+				sessionStorage["membernickname"] = JSON.parse(xhr.responseText).member.membernickname;
+				location.href="../";
+				
+			} else {
+				document.getElementById("msgdisp").innerHTML = "로그인 실패"
+				document.getElementById("msgdisp").style.color = "red";
+			}
+		} else {
+			console.log('Error!');
+			validationcheck = false
+		}
+	};
+});
+</script>
+</html>
+

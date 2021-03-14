@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>node server</title>
+</head>
+<body>
+	<h1> Insert Data </h1>
+	<form method="post" enctype="multipart/form-data" id="insertform">
+		이름:<input type="text" name="itemname" /></br>
+		가격:<input type="text" name="price" /></br>
+		비고:<input type="text" name="description" /></br>
+		이미지:<input type="file" name="pictureurl" accept="image/*" /></br>
+		
+		<input type="button" id="backbtn" value="뒤로가기"/>
+		<input type="button" id="insertbtn" value="삽입"/>
+
+		</form>
+</body>
+
+<script>
+	
+	// 뒤로가기 버튼 
+	document.getElementById("backbtn").addEventListener('click', function(e){
+		location.href="/";
+	})
+	
+	// 삽입 버튼 
+	document.getElementById("insertbtn").addEventListener('click', function(e){
+		// 유효성 검사 - 클라이언트 유효성 검사 수행 
+		
+		// 폼의 데이터 생성 - insertform
+		var formData = new FormData(document.getElementById("insertform"))
+		
+		// 폼의 데이터 전송 
+		// item/insert에 POST 방식으로 insertForm의 데이터를 전송 
+		const xhr = new XMLHttpRequest();
+		xhr.open('POST', 'insert');
+		xhr.send(formData)
+		
+		// 결과 받기 
+		xhr.onreadystatechange = function(e){
+			if(xhr.readyState !== XMLHttpRequest.DONE) {
+				return;
+			}
+			// 정상응답은 200번 
+			if(xhr.status == 200){
+				alert("삽입 성공");
+				location.href = 'viewall';
+			}
+		}
+	})
+	
+</script>
+</html>

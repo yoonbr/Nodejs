@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>회원가입</title>
+</head>
+<body>
+	<h2>회원가입</h2>
+	<form method="post" id="registerform">
+		<p>
+			아이디<input type="text" name="memberid" id="memberid" /><span
+				id="idspan"></span>
+		</p>
+		<p>
+			비밀번호<input type="password" name="memberpw" id="memberpw" /><span
+				id="pwspan"></span>
+		</p>
+		<p>
+			별명<input type="text" name="membernickname" id="membernickname" /><span id="nicknamespan"></span>
+		</p>
+		<input type="button" id="registerbtn" value="회원가입" />
+	</form>
+</body>
+<script>
+	var memberid = document.getElementById("memberid");
+	var memberpw = document.getElementById("memberpw");
+	var membernickname = document.getElementById("membernickname");
+
+	var idspan = document.getElementById("idspan");
+	var pwspan = document.getElementById("pwspan");
+	var nicknamespan = document.getElementById("nicknamespan");
+
+	var registerbtn = document.getElementById("registerbtn");
+
+	var registerform = document.getElementById("registerform");
+	
+	// 유효성 검사 결과 출력 변수 생성
+	var validationcheck = false;
+
+	memberid.addEventListener('focusout', function(e) {
+		// XMLHttpRequest 객체의 생성
+		const xhr = new XMLHttpRequest();
+		xhr.open('GET', 'idcheck?memberid=' + memberid.value);
+		xhr.send(null);
+		// XMLHttpRequest.readyState 프로퍼티가 변경(이벤트 발생)될 때마다 onreadystatechange 이벤트 핸들러가 호출된다.
+		xhr.onreadystatechange = function(e) {
+			// readyStates는 XMLHttpRequest의 상태(state)를 반환
+			// readyState: 4 => DONE(서버 응답 완료)
+			if (xhr.readyState !== XMLHttpRequest.DONE)
+				return;
+	// status는 response 상태 코드를 반환 : 200 => 정상 응답
+			if (xhr.status === 200) {
+				const result = JSON.parse(xhr.responseText).result;
+				if (result == true) {
+					validationcheck = true;
+					idspan.innerHTML = "사용 가능한 아이디입니다."
+				} else {
+					validationcheck = false;
+					idspan.innerHTML = "사용 불가능한 아이디입니다."
+				}
+			} else {
+				console.log('Error!');
+				validationcheck = false
+			}
+		};
+	})
+	registerbtn.addEventListener('click',
+			function(e) {
+				// XMLHttpRequest 객체의 생성
+				const xhr = new XMLHttpRequest();
+				xhr.open('GET', 'nicknamecheck?membernickname='
+						+ membernickname.value);
+				xhr.send(null);
+				// XMLHttpRequest.readyState 프로퍼티가 변경(이벤트 발생)될 때마다 onreadystatechange 이벤트 핸들러가 호출된다.
+				xhr.onreadystatechange = function(e) {
+					// readyStates는 XMLHttpRequest의 상태(state)를 반환
+					// readyState: 4 => DONE(서버 응답 완료)
+					if (xhr.readyState !== XMLHttpRequest.DONE)
+						return;
+					// status는 response 상태 코드를 반환 : 200 => 정상 응답
+					if (xhr.status === 200) {
+						const result = JSON.parse(xhr.responseText).result;
+						if (result == true) {
+							nicknamespan.innerHTML = "사용 가능한 별명입니다."
+							if(validationcheck == true ){
+							
+								const xhr = new XMLHttpRequest();
+								xhr.open('POST', 'register');
+								xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+								xhr.send("memberid=" + memberid.value + "&memberpw=" + memberpw.value + "&membernickname=" + membernickname.value);
+																
+								// XMLHttpRequest.readyState 프로퍼티가 변경(이벤트 발생)될 때마다 onreadystatechange 이벤트 핸들러가 호출된다.
+								xhr.onreadystatechange = function(e) {
+									if (xhr.readyState !== XMLHttpRequest.DONE)
+										return;
+									// status는 response 상태 코드를 반환 : 200 => 정상 응답
+									if (xhr.status === 200) {
+										const result = JSON
+												.parse(xhr.responseText).result;
+										if (result == true) {
+											idspan.innerHTML = "회원 가입 성공"
+										} else {
+											idspan.innerHTML = "회원 가입 실패"
+										}
+
+									} else {
+										console.log('Error!');
+										validationcheck = false
+									}
+								};
+							}
+
+						} else {
+							validationcheck = false;
+							nicknamespan.innerHTML = "사용 불가능한 별명입니다."
+						}
+					} else {
+						console.log('Error!');
+						validationcheck = false
+					}
+				};
+			})
+</script>
+</html>
+	

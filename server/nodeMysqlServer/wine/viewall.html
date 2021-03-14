@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>전체보기</title>
+<style>
+div.body{
+	overflow-y: auto;
+    scrollbar-face-color: #C9BFED;
+    scrollbar-shadow-color: #EDEDED;
+	margin-top: 50px;
+	margin-bottom: 50px;
+}
+
+tr.header{
+    background: #C9BFED;
+}
+
+tr.record{
+    background: #EDEDED;
+}
+
+</style>
+</head>
+<body>
+	<div align="center" class="body">
+		<h2>wine list</h2>
+		<table width="100%">
+			<tr>
+				<td align='center' width="50%">
+					<a href="/">main</a>
+				</td>
+				<td>
+				<td align="right" id="countdisp">
+					데이터개수:
+				</td>
+			</tr>
+		</table>
+		<table border="1" id="winelist" width="100%">
+
+			<tr class="header">
+				<th align="center" width="5%">번호</th>
+				<th align="center" width="40%">이름</th>
+				<th align="center" width="20%">품종</th>
+				<th align="center" width="20%">제조국가</th>
+				<th align="center" width="15%">분류</th>
+			</tr>
+		</table>
+	</div>
+</body>
+<script>
+	var xhr = new XMLHttpRequest();
+	xhr.open('get', 'all');
+	xhr.send(null);
+	
+	xhr.onreadystatechange = function() {
+		if (xhr.readyState == 4) {
+			if (xhr.status >= 200 && xhr.status < 300) {
+				var abc = xhr.responseText;
+				var o = JSON.parse(abc);
+				var countdisp = document.getElementById("countdisp");
+				countdisp.innerHTML += o.count + "개";
+				var displayHtml = ""
+					o.list.forEach( function(wine){
+						displayHtml += "<tr class='record'>";
+						displayHtml += "<td align='center'>" + wine.winenum + "</td>";
+						displayHtml += "<td align='left'>" + "<a href = '#' onclick='detail(" + wine.winenum +")'>" + wine.winename + "</a></td>";
+						displayHtml += "<td align='center'>" + wine.varieties + "</td>";
+						displayHtml += "<td align='right'>" + wine.country + "</td>";
+						displayHtml += "<td align='right'>" + wine.category + "</td>";
+						displayHtml += "</tr>";
+					});
+					document.getElementById('winelist').innerHTML += displayHtml;
+					
+				} else if (xhr.status >= 400 && xhr.status < 500) {
+					alert(xhr.status);
+				}
+			}
+		};
+		
+		function detail(winenum){
+			sessionStorage["winenum"] = winenum;
+			location.href = "getwine";
+		}
+	</script>
+	</html>

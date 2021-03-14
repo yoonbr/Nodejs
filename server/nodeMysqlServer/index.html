@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Node Server</title>
+</head>
+<body>
+	<h2>PortFolio</h2>
+	<a href="wine/viewall">winelist</a><br />
+	<a href="item/list">리스트보기</a><br />
+	<a href="item/insert">아이템 삽입</a><br/>
+	<a href="item/paging">페이지 단위 보기</a><br/>
+	<a href="member/register">회원가입</a><br />
+	<div id="logindisp">
+	
+	</div>
+</body>
+</html>
+
+<script>
+	var logindisp = document.getElementById("logindisp");
+	var membernickname = sessionStorage["membernickname"];
+	if(membernickname != undefined){
+		logindisp.innerHTML = membernickname + "님 환영합니다.<br />";
+		logindisp.innerHTML += "<a href='#' onclick='logout()'>로그아웃</a><br />";
+	}else{
+		logindisp.innerHTML += "<a href='member/login'>로그인</a><br />";
+	}
+		
+	function logout(){
+		sessionStorage.removeItem("memberid");
+		sessionStorage.removeItem("membernickname");
+		location.href = "./";
+	}
+</script>
