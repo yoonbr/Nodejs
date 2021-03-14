@@ -2,34 +2,46 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>상세보기</title>
+<title> view detail </title>
 </head>
 <body>
 	<div align='center' id="disp">
-		<h2>상폼 상세 보기</h2>
+		<h2> view detail </h2>
 		<table>
 			<tr>
 				<td><img id='img'/></td>
 				<td align='center'>
 					<table>
 						<tr height='50'>
-							<td width='80'>상품명</td>
-							<td width='160' id='itemname'></td>
+							<td width='80'>와인이름</td>
+							<td width='160' id='winename'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>품종</td>
+							<td width='160' id='varieties'></td>
+						</tr>	
+						<tr height='50'>
+							<td width='80'>제조국가</td>
+							<td width='160' id='country'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>와인분류</td>
+							<td width='160' id='category'></td>
 						</tr>
 						<tr height='50'>
 							<td width='80'>가격</td>
-							<td width='160' id='price'></td>
-						</tr>	
+							<td width='160' id='avgprice'></td>
+						</tr>
 						<tr height='50'>
-							<td width='80'>비고</td>
-							<td width='160' id='description'></td>
+							<td width='80'>점수</td>
+							<td width='160' id='avgscore'></td>
 						</tr>
 						<tr>
 							<td colspan='2' align='center'
 							width='240'>
-							<a href="viewall">목록보기</a><br/>
-							<a href="#" id="updatebtn">수정하기</a><br/>
-							<a href="#" id="deletebtn">삭제하기</a><br/>
+							<a href="viewall">목록보기</a> 
+							<a href="#" id="updatebtn">수정하기</a>
+							<a href="#" id="deletebtn">삭제하기</a>
 							</td>
 						</tr>
 					</table>
@@ -40,12 +52,12 @@
 </body>
 
 <script>
-	//조회할 itemid 가져오기
-	var itemid = sessionStorage["itemid"];
+	//조회할 winenum 가져오기
+	var winenum = sessionStorage["winenum"];
 	//ajax 객체 생성 
 	var xhr = new XMLHttpRequest();
 	//요청 생성
-	xhr.open('get', '/item/detail/' + itemid);
+	xhr.open('get', '/wine/detail/' + winenum);
 	//요청 전송
 	xhr.send(null);
 	
@@ -53,7 +65,7 @@
 	xhr.onreadystatechange = function(){
 		if(xhr.readyState == 4){
 			if(xhr.status >= 200 && xhr.status < 300){
-				//데이터 확인
+				//데이터 확인 (확인 완료)
 				// alert(xhr.responseText);
 				
 				//데이터 파싱
@@ -61,16 +73,17 @@
 				//데이터가 있는 경우
 				if(object.result == true){
 					//item 키의 값을 가져옵니다.
-					var item = object.item;
+					var wine = object.wine;
 					document.getElementById("img").src = 
-						"../../img/" + item.pictureurl;
-					document.getElementById("itemname").innerHTML = 
-						item.itemname;
-					document.getElementById("price").innerHTML = 
-						item.price +"원";
-					document.getElementById("description").innerHTML = 
-						item.description;
-					
+						"../../img/" + wine.wineimg;
+					document.getElementById("winename").innerHTML = 
+						wine.winename;
+					document.getElementById("varieties").innerHTML = 
+						wine.varieties;
+					document.getElementById("country").innerHTML = 
+						wine.country;
+					document.getElementById("category").innerHTML = 
+						wine.category;
 					
 				}else{
 					document.getElementById("disp").innerHTML =
@@ -85,7 +98,7 @@
 		var result = confirm("정말로 삭제하시겠습니까?")
 		if(result == true){
 			// 삭제할 itemid 찾아오기 
-			var itemid = sessionStorage["itemid"];
+			var winenum = sessionStorage["winenum"];
 			
 			// ajax 요청 객체 생성 
 			var xhr = new XMLHttpRequest(); 
@@ -93,7 +106,7 @@
 			
 			// 파일이 없는 POST 방식의 파라미터를 생성 
 			xhr.setRequestHeader('Content-type', "application/x-www-form-urlencoded");
-			xhr.send("itemid=" + itemid)
+			xhr.send("winenum=" + winenum)
 			
 			// 결과가 전송되었을 때 수행할 작업 
 			xhr.onreadystatechange = function(){

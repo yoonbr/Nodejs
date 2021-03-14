@@ -200,16 +200,17 @@ app.get('/wine/all', (req, res, next) => {
 	});
 });
 
-//상세보기 - itemid를 매개변수로 받아서 하나의 데이터를 찾아서 출력해주는 처리 
-app.get('/item/getitem', (req, res, next) => {
-	itemid = req.params.itemid;
-	res.sendFile(path.join(__dirname, '/item/detail.html'));
+//상세보기 - winenum을 매개변수로 받아서 하나의 데이터를 찾아서 출력해주는 처리 
+app.get('/wine/getwine', (req, res, next) => {
+	winenum = req.params.winenum;
+	res.sendFile(path.join(__dirname, '/wine/detail.html'));
 });
-//상세보기 - itemid를 매개변수로 받아서 하나의 데이터를 찾아서 출력해주는 처리 
-app.get('/item/detail/:itemid', (req, res, next) => {
-	var itemid = req.params.itemid;
+
+//상세보기 - winenum을 매개변수로 받아서 하나의 데이터를 찾아서 출력해주는 처리 
+app.get('/wine/detail/:winenum', (req, res, next) => {
+	var winenum = req.params.winenum;
 	connect();
-	connection.query('SELECT * FROM item where itemid = ?', itemid, function(err, results, fields) {
+	connection.query('SELECT * FROM wine where winenum = ?', [winenum], function(err, results, fields) {
 		if (err)
 			throw err;
 		//데이터가 존재하지 않으면 result에 false를 출력 
@@ -218,17 +219,18 @@ app.get('/item/detail/:itemid', (req, res, next) => {
 		}
 		//데이터가 존재하면 result에 true를 출력하고 데이터를 item에 출력
 		else{
-			res.json({'result':true, 'item':results[0]}); 
+			res.json({'result':true, 'wine':results[0]}); 
 		}
 		close();
 	});
 });
 
 //전체 보기 페이지 이동
-app.get('/item/list', (req, res) => {
-	  res.sendFile(path.join(__dirname, '/item/itemlist.html'));
+app.get('/wine/list', (req, res) => {
+	  res.sendFile(path.join(__dirname, '/wine/winelist.html'));
 });
-app.get('/item/itemlist', (req, res, next) => {
+
+app.get('/wine/winelist', (req, res, next) => {
 	//get 방식의 파라미터 가져오기
 	const pageno = req.query.pageno;
 	const count = req.query.count;
@@ -236,7 +238,7 @@ app.get('/item/itemlist', (req, res, next) => {
 	console.log(count);
 	//데이터를 가져올 시작 위치와 데이터 개수 설정
 	var start = 0
-	var size = 10
+	var size = 3
 	if(pageno != undefined){
 		if(count != undefined){
 			size = parseInt(count)
@@ -246,13 +248,13 @@ app.get('/item/itemlist', (req, res, next) => {
 	//시작위치와 페이지 당 데이터 개수를 설정해서 가져오기
 	var list;
 	connect();
-	connection.query('SELECT * FROM item order by itemid desc limit ?, ?', [start, size], function(err, results, fields) {
+	connection.query('SELECT * FROM wine order by winenum desc limit ?, ?', [start, size], function(err, results, fields) {
 		if (err){
 			throw err;
 		}
 		list = results;
 		//전체 데이터 개수 가져오기
-		connection.query('SELECT count(*) cnt FROM item', function(err, results, fields) {
+		connection.query('SELECT count(*) cnt FROM wine', function(err, results, fields) {
 			if (err)
 				throw err;
 			res.json({'count':results[0].cnt, 'list':list}); 
@@ -262,20 +264,20 @@ app.get('/item/itemlist', (req, res, next) => {
 	});
 });
 
-//item/paging 요청이 get 방식으로 요청된 경우 처리
-//item 디렉토리 안의 paging.html 로 이동
-app.get('/item/paging', (req, res, next) => {
-	res.sendFile(path.join(__dirname, '/item/paging.html'));
+//wine/paging 요청이 get 방식으로 요청된 경우 처리
+//wine 디렉토리 안의 paging.html 로 이동
+app.get('/wine/paging', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/wine/paging.html'));
 });
 
 // 이미지 다운로드를 위한 코드 
-app.get('/item/img/:fileid', function(req, res){
-	var fileId = req.params.fileid;
-	var file = '/Users/adam/Documents/source/node/nodeserver/public/img' + '/' + fileId;
+app.get('/wine/img/:fileid', function(req, res){
+	var wineNum = req.params.winenum;
+	var file = '/Users/yoonbr/git/Nodejs/server/nodeMysqlServer/public/img' + '/' + wineNum;
 	console.log("file:" + file);
-	mimetype = mime.lookup(fileId);
+	mimetype = mime.lookup(wineNum);
 	console.log("file:" + mimetype);
-	res.setHeader('Content-disposition', 'attachment; filename=' + fileId);
+	res.setHeader('Content-disposition', 'attachment; filename=' + wineNum);
 	res.setHeader('Content-type', mimetype);
 	var filestream = fs.createReadStream(file);
 	filestream.pipe(res);
@@ -319,50 +321,52 @@ function updateDate(){
 	writeStream.write(year + "-" + month + "-" + day + "-" + hour + ":" + minute + ":" + second)
 }
 
-//item/insert 요청이 get 방식으로 요청된 경우 처리 
-app.get('/item/insert', (req, res, next) => {
-	res.sendFile(path.join(__dirname, '/item/insert.html'));
+//wine/insert 요청이 get 방식으로 요청된 경우 처리 
+app.get('/wine/insert', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/wine/insert.html'));
 });
 
 //데이터 삽입을 처리하는 코드 (POST)
 //파일 업로드가 있을 때는 , 파일의 업로드 개수 
-app.post('/item/insert', upload.single('pictureurl'), 
+app.post('/wine/insert', upload.single('wineimg'), 
 		(req, res, next) => {
 	
 	// 파라미터 가져오기 
-	const itemname = req.body.itemname;
-	const price = req.body.price;
-	const description = req.body.description;
+	const winename = req.body.winename;
+	const varieties = req.body.varieties;
+	const country = req.body.country;
+	const category = req.body.category;
 	
 	// 파일 읽기
-	var pictureurl; 
+	var wineimg; 
 	// 파일이 있는지 물어보기 
 	if(req.file){
-		pictureurl = req.file.filename
+		wineimg = req.file.filename
 	} else { 
-		pictureurl = "default.jpg";
+		wineimg = "default.png";
 	}
 	
 	// 데이터 베이스 연결 
 	connect();
-	// 가장 큰 itemid를 찾아옴 
-	connection.query('select max(itemid) maxid from item', 
+	// 가장 큰 winenum을 찾아옴 
+	connection.query('select max(winenum) maxid from wine', 
 			function(err, results, fields){
 		if(err) {
 			throw err;
 		}
-		var itemid; 
+		var winenum; 
 		if(results.length > 0) {
-			itemid = results[0].maxid + 1;
+			winenum = results[0].maxid + 1;
 		} else {
-			itemid = 1;
+			winenum = 1;
 		}
 		
 		// 현재 날짜와 시간 가져오기 
 		currentDay(); 
+		
 		// 데이터 삽입 
-				connection.query('insert into item(itemid, itemname, price, description, pictureurl, updatedate) values(?,?,?,?,?,?)', 
-						[itemid, itemname, price, description, pictureurl,  year + '-' + month + '-' + day], 
+				connection.query('insert into wine(winename, varieties, country, category, wineimg) values(?,?,?,?,?)', 
+						[winename, varieties, country, category, wineimg], 
 						function(err, results, fields) {
 					if(err){
 						throw err;
@@ -381,15 +385,15 @@ app.post('/item/insert', upload.single('pictureurl'),
 })
 
 // item 삭제 요청을 처리할 코드 
-app.post('/item/delete', (req, res, netx) => {
+app.post('/wine/delete', (req, res, netx) => {
 	// 파라미터 읽어오기 
-	const itemid = req.body.itemid;
+	const winenum = req.body.winenum;
 	// 현재시간 설정 
 	currentDay();
 	// 데이터베이스 접속
 	connect();
 	// SQL 실행 
-	connection.query('delete from item where itemid=?', [itemid], 
+	connection.query('delete from wine where winenum=?', [winenum], 
 			function(err, results, fields){
 		if(err){
 			throw err;
@@ -405,27 +409,27 @@ app.post('/item/delete', (req, res, netx) => {
 });
 
 //상세보기에서 수정하기를 클릭했을 때 처리 - 페이지 이동
-app.get('/item/update', (req, res, next) => {
-	res.sendFile(path.join(__dirname, '/item/update.html'));
+app.get('/wine/update', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/wine/update.html'));
 });
 
 //수정하기 화면에 수정하기를 클릭했을 때 처리 - 실제 수정을 처리 
 //데이터 수정: itemid, itemname, description, price, oldpictureurl, pictureurl(파일)을 받아서 처리
-app.post('/item/update', upload.single('pictureurl'), (req, res, next) => {
+app.post('/wine/update', upload.single('wineimg'), (req, res, next) => {
 	
 	//파라미터 가져오기 - itemid가 있어야 함 (기존의 아이디 사용)
-	const itemid = req.body.itemid;
-	const itemname = req.body.itemname;
-	const description = req.body.description;
-	const price = req.body.price;
+	const winenum = req.body.winenum;
+	const winename = req.body.winename;
+	const varieties = req.body.varieties;
+	const country = req.body.country;
 	const oldpictureurl = req.body.oldpictureurl;
 
-	var pictureurl;
+	var wineimg;
 	if(req.file){
-		pictureurl = req.file.filename
+		wineimg = req.file.filename
 	}else{
 		// 이전에 썼던걸 사용
-		pictureurl = oldpictureurl;
+		wineimg = oldpictureurl;
 	}
 	
 	connect();
@@ -433,8 +437,8 @@ app.post('/item/update', upload.single('pictureurl'), (req, res, next) => {
 	currentDay();
 	
 	//데이터 수정
-	connection.query('update  item set itemname=?, price=?, description=?, pictureurl=?, updatedate=? where itemid=?', 
-			[itemname, price, description, pictureurl,  year + '-' + month + '-' + day, itemid], function(err, results, fields) {
+	connection.query('update wine set winename=?, varieties=?, country=?, wineimg=? where winenum=?', 
+			[winename, varieties, country, category, wineimg, winenum], function(err, results, fields) {
 		if (err)
 			throw err;
 		if(results.affectedRows == 1){
@@ -449,7 +453,7 @@ app.post('/item/update', upload.single('pictureurl'), (req, res, next) => {
 });
 
 //마지막 업데이트 된 시간을 리턴하는 처리 
-app.get("/item/updatedate", (req, res, next) => {
+app.get("/wine/updatedate", (req, res, next) => {
 	fs.readFile('./update.txt', function(err, data){
 		console.log(data);
 		console.log(data.toString());

@@ -40,7 +40,7 @@ tr.record{
 
 			<tr class="header">
 				<th align="center" width="5%">번호</th>
-				<th align="center" width="40%">이름</th>
+				<th align="center" width="40%">와인이름</th>
 				<th align="center" width="20%">품종</th>
 				<th align="center" width="20%">제조국가</th>
 				<th align="center" width="15%">분류</th>
@@ -78,8 +78,11 @@ tr.record{
 			}
 		};
 		
+		// 제목을 눌렀을 때 호출되는 함수
 		function detail(winenum){
+			// 세션 스토리지에 저장 
 			sessionStorage["winenum"] = winenum;
+			// 상세 보기 페이지로 이동 
 			location.href = "getwine";
 		}
 	</script>
