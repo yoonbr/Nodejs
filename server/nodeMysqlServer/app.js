@@ -175,6 +175,94 @@ app.post('/member/login', (req, res) => {
 	});
 });
 
+// 와인 번호에 따른 노트 목록보기 서비스 처리
+app.get('/note/notelist/:winenum', (req, res, next) => {
+	//뒤쪽 URL 부분 읽기
+	var winenum = req.params.winenum
+	//데이터베이스 연결
+	connect();
+	//데이터 목록을 저장할 변수
+	var list;
+	//데이터 가져오기 SQL 실행
+	connection.query('select * from note left join wine on note.winenum = wine.winenum where note.winenum=?', 
+			[winenum], function(err, results, fields){
+		if(err){
+			throw err;
+		}
+		//에러가 없는 경우 - 가져온 목록을 list 에 저장
+		//결과는 항상 배열입니다.
+		list = results;
+		res.json({'count':list.length, 'list':list});
+		//데이터베이스 닫기
+		close();
+	});
+});
+
+// note/getnote 요청이 get 방식으로 요청된 경우 처리
+// note 디렉토리 안의 detail.html 로 이동
+app.get('/note/getnotelist', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/note/notelist.html'));
+});
+
+
+// 노트 상세보기 서비스 처리
+app.get('/note/detail/:notenum', (req, res, next) => {
+	//뒤쪽 URL 부분 읽기
+	var notenum = req.params.notenum
+	//데이터베이스 연결
+	connect();
+	//데이터 가져오기 SQL 실행
+	connection.query('select * from note left join wine on note.winenum = wine.winenum where note.notenum=?', 
+			[notenum], function(err, results, fields){
+		if(err){
+			throw err;
+		}
+		
+		//데이터 가져왔는지 확인
+		if(results.length == 0){
+			res.json({'result':false});
+		}else{
+			res.json({'result':true, 'note':results[0]})
+		}
+		close();
+	});
+});
+
+//note/getnote 요청이 get 방식으로 요청된 경우 처리
+//note 디렉토리 안의 detail.html 로 이동
+app.get('/note/getnote', (req, res, next) => {
+	res.sendFile(path.join(__dirname, '/note/detail.html'));
+});
+
+//get 방식으로 note/all 요청이 오면 데이터를 리턴
+app.get('/note/all', (req, res, next) => {
+//데이터베이스 연결
+	connect();
+	//데이터 목록을 저장할 변수
+	var list;
+	//전체 목록 가져오는 SQL을 실행
+	connection.query(
+		"select * from note left join wine on note.winenum = wine.winenum order by notenum desc", 
+		function(err, results, fields){
+			//err은 에러 객체
+			//results는 SQL 실행 결과
+			if(err){
+				throw err;
+			}
+			//에러가 없는 경우 - 가져온 목록을 list 에 저장
+			//결과는 항상 배열입니다.
+			list = results;
+			res.json({'count':list.length, 'list':list});
+			//데이터베이스 닫기
+			close();
+		})
+});
+
+//get 방식으로 /note/viewall 요청이 오면 /note/all.html을 출력 
+app.get('/note/viewall', (req, res) => {
+	  res.sendFile(path.join(__dirname, '/note/all.html'));
+})
+
 //전체 보기 페이지 이동
 app.get('/wine/viewall', (req, res) => {
 	  res.sendFile(path.join(__dirname, '/wine/viewall.html'));
@@ -271,13 +359,26 @@ app.get('/wine/paging', (req, res, next) => {
 });
 
 // 이미지 다운로드를 위한 코드 
-app.get('/wine/img/:fileid', function(req, res){
+app.get('/wine/img/:winenum', function(req, res){
 	var wineNum = req.params.winenum;
 	var file = '/Users/yoonbr/git/Nodejs/server/nodeMysqlServer/public/img' + '/' + wineNum;
 	console.log("file:" + file);
 	mimetype = mime.lookup(wineNum);
 	console.log("file:" + mimetype);
 	res.setHeader('Content-disposition', 'attachment; filename=' + wineNum);
+	res.setHeader('Content-type', mimetype);
+	var filestream = fs.createReadStream(file);
+	filestream.pipe(res);
+});
+
+//이미지 다운로드를 위한 코드 
+app.get('/note/img/:notenum', function(req, res){
+	var noteNum = req.params.noteNum;
+	var file = '/Users/yoonbr/git/Nodejs/server/nodeMysqlServer/public/img' + '/' + noteNum;
+	console.log("file:" + file);
+	mimetype = mime.lookup(noteNum);
+	console.log("file:" + mimetype);
+	res.setHeader('Content-disposition', 'attachment; filename=' + noteNum);
 	res.setHeader('Content-type', mimetype);
 	var filestream = fs.createReadStream(file);
 	filestream.pipe(res);
@@ -400,6 +501,7 @@ app.post('/wine/delete', (req, res, netx) => {
 		}
 		// 삭제 성공 여부 판단 
 		if(results.affectedRows >= 0){
+			updateDate();
 			res.json({'result':true});
 		}else{
 			res.json({'result':false});

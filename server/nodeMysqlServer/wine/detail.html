@@ -42,6 +42,7 @@
 							<a href="viewall">목록보기</a> 
 							<a href="#" id="updatebtn">수정하기</a>
 							<a href="#" id="deletebtn">삭제하기</a>
+							<a href="#" id="notebtn">NOTE</a>
 							</td>
 						</tr>
 					</table>
@@ -130,6 +131,13 @@
 	document.getElementById("updatebtn").addEventListener('click', function(e){
 		location.href = 'update';
 	})
+	
+	// 수정하기 링크를 눌렀을 때 수행할 스크립트를 작성
+	document.getElementById("notebtn").addEventListener('click', function(e){
+		location.href = 'http://192.168.10.98/note/getnote';
+	})
+
+	
 </script>
 
 </html>

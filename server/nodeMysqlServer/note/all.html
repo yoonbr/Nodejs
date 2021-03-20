@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>node server</title>
+</head>
+<body>
+	<h2>NOTE LIST</h2>
+	<div align = "center" class="body">
+		<table width = '100%'>
+			<tr>
+				<td align='center' width="50%">
+					<a href="/">main</a>
+				</td>
+				<td align='right' id="countdisp">
+					데이터 개수:
+				</td>
+			</tr>	
+		</table>
+		<table border="1" id="notelist" width="100%">
+			<tr class="header">
+			<!-- winename, varieties, country, wineimg, vintage,  
+						nickname, vintage, price, score, firstword, secondword, thirdword, etcword -->
+				<th align="center" width="10%">와인이름</th>
+				<th align="center" width="10%">품종</th>
+				<th align="center" width="10%">제조국가</th>
+				<th align="center" width="5%">빈티지</th>
+				<th align="center" width="10%">닉네임</th>
+				<th align="center" width="10%">가격</th>
+				<th align="center" width="5%">점수</th>
+				<th align="center" width="10%">단어1</th>
+				<th align="center" width="10%">단어2</th>
+				<th align="center" width="10%">단어3</th>
+				<th align="center" width="10%">기타노트</th>
+			</tr>
+		</table>
+	</div>
+</body>
+
+<script>
+	//ajax 객체 생성
+	var xhr = new XMLHttpRequest();
+	//요청 생성
+	xhr.open('get', 'all');
+	//요청 전송
+	xhr.send(null);
+	
+	//서버의 응답 처리
+	xhr.onreadystatechange = function(){
+		if(xhr.readyState == 4){
+			if(xhr.status >= 200 && xhr.status < 300){
+				//전송된 결과 확인
+				//텍스트 나 json 은 responseText
+				//XML 은 responseXML
+				// alert(xhr.responseText);
+				
+				//JSON 파싱 
+				var data = JSON.parse(xhr.responseText);
+				
+				//개수 출력
+				var countdisp = document.getElementById("countdisp");
+				countdisp.innerHTML += data.count + "개"
+				
+				//데이터 목록 가져오기 
+				var list = data.list;
+				
+				//출력할 내용을 저장할 변수를 생성 
+				var displayHTML = "";
+				
+				//배열을 순회 
+				list.forEach(function(note){
+					displayHTML += "<tr class='record'>";
+					displayHTML += "<td align='left'>" + "<a href='#' onclick='detail("+ note.winenum +")'>" + note.winename + "</a></td>";
+					displayHTML += "<td align='left'>" + note.varieties + "</td>";
+					displayHTML += "<td align='left'>" + note.country + "</td>";
+					displayHTML += "<td align='left'>" + note.vintage + "</td>";
+					displayHTML += "<td align='left'>" + note.nickname + "</td>";
+					displayHTML += "<td align='right'>" + note.price + "원</td>";
+					displayHTML += "<td align='left'>" + note.score + "점</td>";
+					displayHTML += "<td align='left'>" + note.firstword + "</td>";
+					displayHTML += "<td align='left'>" + note.secondword + "</td>";
+					displayHTML += "<td align='left'>" + note.thirdword + "</td>";
+					displayHTML += "<td align='left'>" + note.etcword + "</td>";			
+					displayHTML += "</tr>";
+				}); 
+				
+				//출력
+				document.getElementById("notelist").innerHTML 
+					+= displayHTML;
+				
+			}
+		}
+	}
+	// 제목을 눌렀을 때 호출되는 함수
+	function detail(winenum){
+		// 세션 스토리지에 저장 
+		sessionStorage["winenum"] = winenum;
+		// 상세 보기 페이지로 이동 
+		location.href = "getnotelist";
+	}
+
+</script>
+</html>

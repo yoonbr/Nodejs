@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title> note detail </title>
+</head>
+<body>
+	<div align='center' id="disp">
+		<h2> note detail </h2>
+		<table>
+			<tr>
+				<td><img id='img'/></td>
+				<td align='center'>
+					<table>
+						<tr height='50'>
+							<td width='80'>와인이름</td>
+							<td width='160' id='winename'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>품종</td>
+							<td width='160' id='varieties'></td>
+						</tr>	
+						<tr height='50'>
+							<td width='80'>vintage</td>
+							<td width='160' id='vintage'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>nickname</td>
+							<td width='160' id='nickname'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>가격</td>
+							<td width='160' id='price'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>점수</td>
+							<td width='160' id='score'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>단어 1</td>
+							<td width='160' id='firstword'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>단어 2</td>
+							<td width='160' id='secondword'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>단어 3</td>
+							<td width='160' id='thirdword'></td>
+						</tr>
+						<tr height='50'>
+							<td width='80'>기타</td>
+							<td width='160' id='etcword'></td>
+						</tr>
+						<tr>
+							<td colspan='2' align='center'
+							width='240'>
+							<a href="viewall">목록보기</a> 
+							<a href="#" id="updatebtn">수정하기</a>
+							<a href="#" id="deletebtn">삭제하기</a>
+							</td>
+						</tr>
+					</table>
+				</td>
+				</tr>			
+		</table>
+	</div>
+</body>
+
+<script>
+	//조회할 winenum 가져오기
+	var notenum = sessionStorage["notenum"];
+	//ajax 객체 생성 
+	var xhr = new XMLHttpRequest();
+	//요청 생성
+	xhr.open('get', '/note/detail/' + notenum);
+	//요청 전송
+	xhr.send(null);
+	
+	//ajax 응답이 온 경우 호출되는 콜백 처리
+	xhr.onreadystatechange = function(){
+		if(xhr.readyState == 4){
+			if(xhr.status >= 200 && xhr.status < 300){
+				// 데이터 확인
+				// alert(xhr.responseText);
+		
+				//데이터 파싱
+				var object = JSON.parse(xhr.responseText);
+				//데이터가 있는 경우
+				if(object.result == true){
+					
+					//note 키의 값을 가져옵니다.
+					var note = object.note;
+					document.getElementById("img").src = "../../img/" + note.wineimg;
+					document.getElementById("winename").innerHTML = note.winename;
+					document.getElementById("varieties").innerHTML = note.varieties;
+					document.getElementById("vintage").innerHTML = note.vintage;
+					document.getElementById("nickname").innerHTML = note.nickname;
+					document.getElementById("price").innerHTML = note.price + "원";
+					document.getElementById("score").innerHTML = note.score + "점";
+					document.getElementById("firstword").innerHTML = note.firstword;
+					document.getElementById("secondword").innerHTML = note.secondword;
+					document.getElementById("thirdword").innerHTML = note.thirdword;
+					document.getElementById("etcword").innerHTML = note.etcword;
+					
+				}else{
+					document.getElementById("disp").innerHTML =
+						'<h3>데이터가 존재하지 않습니다.</h3>';
+			    }
+			}
+		}
+	};
+</script>
+
+</html>
